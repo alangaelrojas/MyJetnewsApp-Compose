@@ -10,6 +10,7 @@ import androidx.ui.material.*
 import com.test.myjetnewsapp.ui.Screen
 import com.test.myjetnewsapp.ui.VectorImageButton
 import com.test.myjetnewsapp.ui.navigateTo
+import com.test.myjetnewsapp.R
 
 @Composable
 fun ArticleScreen(postId: String){
@@ -36,7 +37,7 @@ fun ArticleScreen(postId: String){
                 }
             }
         )
-        PostContent()
+        PostContent(modifier = Flexible(1f), post = post)
     }
 }
 

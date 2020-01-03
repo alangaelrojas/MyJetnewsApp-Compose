@@ -2,20 +2,30 @@ package com.test.myjetnewsapp.ui.article
 
 import androidx.compose.Composable
 import androidx.compose.unaryPlus
-import androidx.ui.core.Clip
-import androidx.ui.core.Modifier
-import androidx.ui.core.Text
-import androidx.ui.core.dp
+import androidx.ui.core.*
 import androidx.ui.foundation.DrawImage
 import androidx.ui.foundation.VerticalScroller
+import androidx.ui.foundation.shape.DrawShape
+import androidx.ui.foundation.shape.corner.CircleShape
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
 import androidx.ui.layout.*
+import com.test.myjetnewsapp.R
+import androidx.ui.layout.Size
 import androidx.ui.material.MaterialTheme
+import androidx.ui.material.surface.Surface
 import androidx.ui.material.withOpacity
-import com.test.myjetnewsapp.model.Metadata
-import com.test.myjetnewsapp.model.Paragraph
-import com.test.myjetnewsapp.model.Post
+import androidx.ui.text.AnnotatedString
+import androidx.ui.text.ParagraphStyle
+import androidx.ui.text.TextStyle
+import androidx.ui.text.font.FontFamily
+import androidx.ui.text.font.FontStyle
+import androidx.ui.text.font.FontWeight
+import androidx.ui.text.style.TextDecoration
+import androidx.ui.text.style.TextIndent
+import androidx.ui.tooling.preview.Preview
+import com.test.myjetnewsapp.data.post3
+import com.test.myjetnewsapp.model.*
 import com.test.myjetnewsapp.ui.VectorImage
 
 private val defaultSpacerSize = 16.dp
@@ -28,6 +38,20 @@ fun PostContent(modifier: Modifier = Modifier.None, post: Post){
         Column(modifier = Spacing(left = defaultSpacerSize, right = defaultSpacerSize)) {
             HeightSpacer(height = defaultSpacerSize)
             PostHeaderImage(post)
+            Text(text = post.title, style = typography.h4)
+            HeightSpacer(height = 8.dp)
+            post.subtitle?.let {subtitle ->
+                Text(
+                    text = subtitle,
+                    style = typography.body2.withOpacity(0.6f),
+                    paragraphStyle = ParagraphStyle(lineHeight = 20.sp)
+                )
+                HeightSpacer(height = defaultSpacerSize)
+            }
+            PostMetadata(metadata = post.metadata)
+            HeightSpacer(height = 24.dp)
+            PostContents(paragraph = post.paragraphs)
+            HeightSpacer(height = 48.dp)
         }
     }
 }
@@ -77,6 +101,154 @@ private fun Paragraph(paragraph: Paragraph){
 
     val annotatedString = paragraphToAnnotatedString(paragraph)
     Container(modifier = Spacing(bottom = trailingPadding)) {
-        when
+        when(paragraph.type){
+            ParagraphType.Bullet -> BulletParagraph(
+                text = annotatedString,
+                textStyle = textStyle,
+                paragraphStyle = paragraphStyle
+            )
+            ParagraphType.CodeBlock -> CodeBlockParagraph(
+                text = annotatedString,
+                textStyle = textStyle,
+                paragraphStyle = paragraphStyle
+            )
+            ParagraphType.Header -> {
+                Text(
+                    modifier = Spacing(top = 16.dp),
+                    text = annotatedString,
+                    style = textStyle,
+                    paragraphStyle = paragraphStyle
+                )
+            }
+            else -> Text(
+                text = annotatedString,
+                style = textStyle,
+                paragraphStyle = paragraphStyle
+            )
+        }
     }
+}
+
+@Composable
+private fun CodeBlockParagraph(
+    text: AnnotatedString,
+    textStyle: TextStyle,
+    paragraphStyle: ParagraphStyle
+){
+    Surface(
+        color = codeBlockBackground,
+        shape = RoundedCornerShape(4.dp)
+    ) {
+       Text(
+           modifier = Spacing(top = 16.dp),
+           text = text,
+           style = textStyle,
+           paragraphStyle = paragraphStyle
+       )
+    }
+}
+
+@Composable
+private fun BulletParagraph(
+  text: AnnotatedString,
+  textStyle: TextStyle,
+  paragraphStyle: ParagraphStyle
+){
+    Row {
+       Container(modifier = Size(8.dp, 8.dp)) {
+           DrawShape(shape = CircleShape, color = Color.DarkGray)
+       }
+        Text(
+            modifier = Flexible(1f),
+            text = text,
+            style = textStyle,
+            paragraphStyle = paragraphStyle
+        )
+    }
+}
+
+private data class ParagraphStyling(
+    val textStyle: TextStyle,
+    val paragraphStyle: ParagraphStyle,
+    val trailingPadding: Dp
+)
+
+private fun ParagraphType.getTextAndParagraphStyle(): ParagraphStyling{
+    val typography = +MaterialTheme.typography()
+    var textStyle: TextStyle = typography.body1
+    var paragraphStyle = ParagraphStyle()
+    var trailingPadding = 24.dp
+
+    when(this){
+        ParagraphType.Subhead -> {
+            textStyle = typography.h6
+            trailingPadding = 16.dp
+        }
+        ParagraphType.Text -> {
+            textStyle = typography.body1
+            paragraphStyle = paragraphStyle.copy(lineHeight = 28.sp)
+        }
+        ParagraphType.Header -> {
+            textStyle = typography.h5
+            trailingPadding = 16.dp
+        }
+        ParagraphType.CodeBlock -> textStyle =
+            (typography.body1)
+                .copy(background = codeBlockBackground, fontFamily = FontFamily.Monospace)
+        ParagraphType.Quote -> textStyle = typography.body1
+        ParagraphType.Bullet -> {
+            paragraphStyle = ParagraphStyle(textIndent = TextIndent(firstLine = 8.sp))
+        }
+    }
+    return ParagraphStyling(
+        textStyle,
+        paragraphStyle,
+        trailingPadding
+    )
+}
+
+private fun paragraphToAnnotatedString(paragraph: Paragraph): AnnotatedString{
+    val styles = paragraph.markups.map { it.toAnnotatedStringItem() }
+    return AnnotatedString(text = paragraph.text, textStyles = styles)
+}
+
+private fun Markup.toAnnotatedStringItem(): AnnotatedString.Item<TextStyle>{
+    val typography = +MaterialTheme.typography()
+    return when(this.type){
+        MarkupType.Italic ->{
+            AnnotatedString.Item(
+                typography.body1.copy(fontStyle = FontStyle.Italic),
+                start,
+                end
+            )
+        }
+        MarkupType.Link -> {
+            AnnotatedString.Item(
+                typography.body1.copy(decoration = TextDecoration.Underline),
+                start,
+                end
+            )
+        }
+        MarkupType.Bold -> {
+            AnnotatedString.Item(
+                typography.body1.copy(fontWeight = FontWeight.Bold),
+                start,
+                end
+            )
+        }
+        MarkupType.Code -> {
+            AnnotatedString.Item(
+                typography.body1
+                    .copy(background = codeBlockBackground, fontFamily = FontFamily.Monospace),
+                start,
+                end
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun preview(){
+    PostContent(post = post3)
 }

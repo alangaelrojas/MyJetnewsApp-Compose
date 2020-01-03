@@ -12,10 +12,12 @@ import androidx.ui.core.dp
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
 import androidx.ui.layout.*
-import androidx.ui.layout.R
+import com.test.myjetnewsapp.R
 import androidx.ui.material.*
 import androidx.ui.material.surface.Surface
+import androidx.ui.tooling.preview.Preview
 import com.test.myjetnewsapp.ui.article.ArticleScreen
+import com.test.myjetnewsapp.ui.home.HomeScreen
 
 @Composable
 fun MyJetNewsApp(){
@@ -37,9 +39,7 @@ fun MyJetNewsApp(){
                 )
             },
             bodyContent = { AppContent { onDrawerStateChanged(DrawerState.Opened) } }
-                )
-            {
-        }
+        )
     }
 }
 
@@ -49,7 +49,7 @@ private fun AppContent(openDrawer: () -> Unit){
         Surface(color = (+MaterialTheme.colors()).background) {
             when (screen){
                 is Screen.Home -> HomeScreen { openDrawer() }
-                is Screen.Interests -> InterestsScreen { openDrawer() }
+                //is Screen.Interests ->  { openDrawer() }
                 is Screen.Article -> ArticleScreen(postId = screen.postId)
             }
         }
@@ -71,8 +71,25 @@ fun AppDrawer(
             WidthSpacer(8.dp)
             VectorImage(id = R.drawable.ic_jetnews_wordmark)
         }
+
         Divider(color = Color(0x14333333))
-        DrawerButton()
+        DrawerButton(
+            icon = R.drawable.ic_home,
+            label = "Home",
+            isSelected = currentScreen == Screen.Home
+        ){
+            navigateTo(Screen.Home)
+            closeDrawer()
+        }
+
+        DrawerButton(
+            icon = R.drawable.ic_interests,
+            label = "Interests",
+            isSelected = currentScreen == Screen.Interests
+        ){
+            navigateTo(Screen.Interests)
+            closeDrawer()
+        }
     }
 }
 
@@ -116,6 +133,7 @@ private fun DrawerButton(
         }
     }
 }
+@Preview
 @Composable
 fun preview(){
     AppDrawer(
