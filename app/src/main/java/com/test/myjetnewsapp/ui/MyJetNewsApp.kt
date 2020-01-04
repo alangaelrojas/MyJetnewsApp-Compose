@@ -2,7 +2,6 @@ package com.test.myjetnewsapp.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.Composable
-import androidx.compose.frames.open
 import androidx.compose.state
 import androidx.compose.unaryPlus
 import androidx.ui.animation.Crossfade
@@ -18,6 +17,7 @@ import androidx.ui.material.surface.Surface
 import androidx.ui.tooling.preview.Preview
 import com.test.myjetnewsapp.ui.article.ArticleScreen
 import com.test.myjetnewsapp.ui.home.HomeScreen
+import com.test.myjetnewsapp.ui.interests.InterestsScreen
 
 @Composable
 fun MyJetNewsApp(){
@@ -49,7 +49,7 @@ private fun AppContent(openDrawer: () -> Unit){
         Surface(color = (+MaterialTheme.colors()).background) {
             when (screen){
                 is Screen.Home -> HomeScreen { openDrawer() }
-                //is Screen.Interests ->  { openDrawer() }
+                is Screen.Interests ->  InterestsScreen{ openDrawer() }
                 is Screen.Article -> ArticleScreen(postId = screen.postId)
             }
         }
@@ -57,7 +57,7 @@ private fun AppContent(openDrawer: () -> Unit){
 }
 
 @Composable
-fun AppDrawer(
+private fun AppDrawer(
     currentScreen: Screen,
     closeDrawer: () -> Unit
     ){
